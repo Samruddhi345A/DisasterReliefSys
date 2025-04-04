@@ -2,8 +2,6 @@ package dsaNexsus;
 
 import java.util.*;
 
-
-
 // Relief Request Class
 
 class ReliefRequest {
@@ -470,7 +468,7 @@ class DisasterReliefAllocator {
 
         map.put(request.lID, request);
 
-        stack.push(request);
+        //stack.push(request);
 
     }
 
