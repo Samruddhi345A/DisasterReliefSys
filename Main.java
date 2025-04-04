@@ -2,774 +2,774 @@ package dsaNexsus;
 
 import java.util.*;
 
-// Relief Request Class
+//Relief Request Class
 
 class ReliefRequest {
 
-    String lID, lName, resType;
+ String lID, lName, resType;
 
-    int priority, quantity;
+ int priority, quantity;
 
-    long timestamp;
+ long timestamp;
 
 
 
-    public ReliefRequest(String lID, String lName, String resType, int priority, int quantity) {
+ public ReliefRequest(String lID, String lName, String resType, int priority, int quantity) {
 
-        this.lID = lID;
+     this.lID = lID;
 
-        this.lName = lName;
+     this.lName = lName;
 
-        this.resType = resType;
+     this.resType = resType;
 
-        this.priority = priority;
+     this.priority = priority;
 
-        this.quantity = quantity;
+     this.quantity = quantity;
 
-        this.timestamp = System.currentTimeMillis();
+     this.timestamp = System.currentTimeMillis();
 
-    }
+ }
 
 }
 
 
 
-// Priority Queue using Min-Heap
+//Priority Queue using Min-Heap
 
 class PriorityQ {
 
-    ReliefRequest[] heap;
+ ReliefRequest[] heap;
 
-    int size;
+ int size;
 
 
 
-    PriorityQ(int capacity) {
+ PriorityQ(int capacity) {
 
-        heap = new ReliefRequest[capacity];
+     heap = new ReliefRequest[capacity];
 
-        size = 0;
+     size = 0;
 
-    }
+ }
 
 
 
-    private void swap(int i, int j) {
+ private void swap(int i, int j) {
 
-        ReliefRequest temp = heap[i];
+     ReliefRequest temp = heap[i];
 
-        heap[i] = heap[j];
+     heap[i] = heap[j];
 
-        heap[j] = temp;
+     heap[j] = temp;
 
-    }
+ }
 
 
 
-    private boolean isHigherPriority(ReliefRequest a, ReliefRequest b) {
+ private boolean isHigherPriority(ReliefRequest a, ReliefRequest b) {
 
-        return a.priority < b.priority || (a.priority == b.priority && a.timestamp < b.timestamp);
+     return a.priority < b.priority || (a.priority == b.priority && a.timestamp < b.timestamp);
 
-    }
+ }
 
 
 
-    public void insert(ReliefRequest request) {
+ public void insert(ReliefRequest request) {
 
-        heap[size] = request;
+     heap[size] = request;
 
-        int current = size++;
+     int current = size++;
 
-        while (current > 0 && isHigherPriority(heap[current], heap[(current - 1) / 2])) {
+     while (current > 0 && isHigherPriority(heap[current], heap[(current - 1) / 2])) {
 
-            swap(current, (current - 1) / 2);
+         swap(current, (current - 1) / 2);
 
-            current = (current - 1) / 2;
+         current = (current - 1) / 2;
 
-        }
+     }
 
-    }
+ }
 
 
 
-    public ReliefRequest extractMin() {
+ public ReliefRequest extractMin() {
 
-        if (size == 0) return null;
+     if (size == 0) return null;
 
-        ReliefRequest result = heap[0];
+     ReliefRequest result = heap[0];
 
-        heap[0] = heap[--size];
+     heap[0] = heap[--size];
 
-        int current = 0;
+     int current = 0;
 
-        while (true) {
+     while (true) {
 
-            int left = 2 * current + 1, right = 2 * current + 2, smallest = current;
+         int left = 2 * current + 1, right = 2 * current + 2, smallest = current;
 
-            if (left < size && isHigherPriority(heap[left], heap[smallest])) smallest = left;
+         if (left < size && isHigherPriority(heap[left], heap[smallest])) smallest = left;
 
-            if (right < size && isHigherPriority(heap[right], heap[smallest])) smallest = right;
+         if (right < size && isHigherPriority(heap[right], heap[smallest])) smallest = right;
 
-            if (smallest != current) {
+         if (smallest != current) {
 
-                swap(current, smallest);
+             swap(current, smallest);
 
-                current = smallest;
+             current = smallest;
 
-            } else break;
+         } else break;
 
-        }
+     }
 
-        return result;
+     return result;
 
-    }
+ }
 
 
 
-    public ReliefRequest getOldestPending() {
+ public ReliefRequest getOldestPending() {
 
-        long oldest = Long.MAX_VALUE;
+     long oldest = Long.MAX_VALUE;
 
-        ReliefRequest res = null;
+     ReliefRequest res = null;
 
-        for (int i = 0; i < size; i++) {
+     for (int i = 0; i < size; i++) {
 
-            if (heap[i].timestamp < oldest) {
+         if (heap[i].timestamp < oldest) {
 
-                oldest = heap[i].timestamp;
+             oldest = heap[i].timestamp;
 
-                res = heap[i];
+             res = heap[i];
 
-            }
+         }
 
-        }
+     }
 
-        return res;
+     return res;
 
-    }
+ }
 
 
 
-    public void promoteOldRequests(long maxWaitMillis) {
+ public void promoteOldRequests(long maxWaitMillis) {
 
-        long now = System.currentTimeMillis();
+     long now = System.currentTimeMillis();
 
-        for (int i = 0; i < size; i++) {
+     for (int i = 0; i < size; i++) {
 
-            if ((now - heap[i].timestamp) >= maxWaitMillis && heap[i].priority > 1) {
+         if ((now - heap[i].timestamp) >= maxWaitMillis && heap[i].priority > 1) {
 
-                heap[i].priority--;
+             heap[i].priority--;
 
-            }
+         }
 
-        }
+     }
 
-    }
+ }
 
 
 
-    public boolean isEmpty() {
+ public boolean isEmpty() {
 
-        return size == 0;
+     return size == 0;
 
-    }
+ }
 
 
 
-    public List<ReliefRequest> getTopK(int k) {
+ public List<ReliefRequest> getTopK(int k) {
 
-        List<ReliefRequest> top = new ArrayList<>();
+     List<ReliefRequest> top = new ArrayList<>();
 
-        PriorityQ temp = new PriorityQ(size);
+     PriorityQ temp = new PriorityQ(size);
 
-        for (int i = 0; i < size; i++) temp.insert(heap[i]);
+     for (int i = 0; i < size; i++) temp.insert(heap[i]);
 
-        for (int i = 0; i < k && !temp.isEmpty(); i++) top.add(temp.extractMin());
+     for (int i = 0; i < k && !temp.isEmpty(); i++) top.add(temp.extractMin());
 
-        return top;
+     return top;
 
-    }
+ }
 
 }
 
 
 
-// Stack with Undo Limit
+//Stack with Undo Limit
 
 class Stack {
 
-    ReliefRequest[] stack;
+ ReliefRequest[] stack;
 
-    int top;
+ int top;
 
-    final int UNDO_LIMIT = 3;
-
-
-
-    Stack(int capacity) {
-
-        stack = new ReliefRequest[capacity];
-
-        top = -1;
-
-    }
+ final int UNDO_LIMIT = 3;
 
 
 
-    public void push(ReliefRequest request) {
+ Stack(int capacity) {
 
-        if (top + 1 == UNDO_LIMIT) pop();
+     stack = new ReliefRequest[capacity];
 
-        stack[++top] = request;
+     top = -1;
 
-    }
-
-
-
-    public ReliefRequest pop() {
-
-        return top == -1 ? null : stack[top--];
-
-    }
+ }
 
 
 
-    public boolean isEmpty() {
+ public void push(ReliefRequest request) {
 
-        return top == -1;
+     if (top + 1 == UNDO_LIMIT) pop();
 
-    }
+     stack[++top] = request;
+
+ }
 
 
 
-    public List<ReliefRequest> getHistory() {
+ public ReliefRequest pop() {
 
-        List<ReliefRequest> history = new ArrayList<>();
+     return top == -1 ? null : stack[top--];
 
-        for (int i = 0; i <= top; i++) history.add(stack[i]);
+ }
 
-        return history;
 
-    }
+
+ public boolean isEmpty() {
+
+     return top == -1;
+
+ }
+
+
+
+ public List<ReliefRequest> getHistory() {
+
+     List<ReliefRequest> history = new ArrayList<>();
+
+     for (int i = 0; i <= top; i++) history.add(stack[i]);
+
+     return history;
+
+ }
 
 }
 
 
 
-// Custom Hash Map
+//Custom Hash Map
 
 class MyHashMap {
 
-    class Node {
+ class Node {
 
-        String key;
+     String key;
 
-        ReliefRequest value;
+     ReliefRequest value;
 
-        Node next;
+     Node next;
 
 
 
-        Node(String key, ReliefRequest value) {
+     Node(String key, ReliefRequest value) {
 
-            this.key = key;
+         this.key = key;
 
-            this.value = value;
+         this.value = value;
 
-        }
+     }
 
-    }
+ }
 
 
 
-    Node[] buckets;
+ Node[] buckets;
 
-    int size;
+ int size;
 
 
 
-    public MyHashMap(int size) {
+ public MyHashMap(int size) {
 
-        this.size = size;
+     this.size = size;
 
-        buckets = new Node[size];
+     buckets = new Node[size];
 
-    }
+ }
 
 
 
-    private int getIndex(String key) {
+ private int getIndex(String key) {
 
-        int hash = 0;
+     int hash = 0;
 
-        for (char ch : key.toCharArray()) hash = (hash * 31 + ch) % size;
+     for (char ch : key.toCharArray()) hash = (hash * 31 + ch) % size;
 
-        return hash;
+     return hash;
 
-    }
+ }
 
 
 
-    public void put(String key, ReliefRequest value) {
+ public void put(String key, ReliefRequest value) {
 
-        int index = getIndex(key);
+     int index = getIndex(key);
 
-        Node head = buckets[index];
+     Node head = buckets[index];
 
-        while (head != null) {
+     while (head != null) {
 
-            if (head.key.equals(key)) {
+         if (head.key.equals(key)) {
 
-                head.value = value;
+             head.value = value;
 
-                return;
+             return;
 
-            }
+         }
 
-            head = head.next;
+         head = head.next;
 
-        }
+     }
 
-        Node newNode = new Node(key, value);
+     Node newNode = new Node(key, value);
 
-        newNode.next = buckets[index];
+     newNode.next = buckets[index];
 
-        buckets[index] = newNode;
+     buckets[index] = newNode;
 
-    }
+ }
 
 
 
-    public ReliefRequest get(String key) {
+ public ReliefRequest get(String key) {
 
-        int index = getIndex(key);
+     int index = getIndex(key);
 
-        Node head = buckets[index];
+     Node head = buckets[index];
 
-        while (head != null) {
+     while (head != null) {
 
-            if (head.key.equals(key)) return head.value;
+         if (head.key.equals(key)) return head.value;
 
-            head = head.next;
+         head = head.next;
 
-        }
+     }
 
-        return null;
+     return null;
 
-    }
+ }
 
 
 
-    public void remove(String key) {
+ public void remove(String key) {
 
-        int index = getIndex(key);
+     int index = getIndex(key);
 
-        Node head = buckets[index], prev = null;
+     Node head = buckets[index], prev = null;
 
-        while (head != null) {
+     while (head != null) {
 
-            if (head.key.equals(key)) {
+         if (head.key.equals(key)) {
 
-                if (prev == null) buckets[index] = head.next;
+             if (prev == null) buckets[index] = head.next;
 
-                else prev.next = head.next;
+             else prev.next = head.next;
 
-                return;
+             return;
 
-            }
+         }
 
-            prev = head;
+         prev = head;
 
-            head = head.next;
+         head = head.next;
 
-        }
+     }
 
-    }
+ }
 
 
 
-    public List<ReliefRequest> getAll() {
+ public List<ReliefRequest> getAll() {
 
-        List<ReliefRequest> all = new ArrayList<>();
+     List<ReliefRequest> all = new ArrayList<>();
 
-        for (Node bucket : buckets) {
+     for (Node bucket : buckets) {
 
-            while (bucket != null) {
+         while (bucket != null) {
 
-                all.add(bucket.value);
+             all.add(bucket.value);
 
-                bucket = bucket.next;
+             bucket = bucket.next;
 
-            }
+         }
 
-        }
+     }
 
-        return all;
+     return all;
 
-    }
+ }
 
 
 
-    public int countRequestsByType(String type) {
+ public int countRequestsByType(String type) {
 
-        int count = 0;
+     int count = 0;
 
-        for (Node bucket : buckets) {
+     for (Node bucket : buckets) {
 
-            while (bucket != null) {
+         while (bucket != null) {
 
-                if (bucket.value.resType.equalsIgnoreCase(type)) count++;
+             if (bucket.value.resType.equalsIgnoreCase(type)) count++;
 
-                bucket = bucket.next;
+             bucket = bucket.next;
 
-            }
+         }
 
-        }
+     }
 
-        return count;
+     return count;
 
-    }
+ }
 
 }
 
 
 
-// Main Allocator System
+//Main Allocator System
 
 class DisasterReliefAllocator {
 
-    PriorityQ queue = new PriorityQ(100);
+ PriorityQ queue = new PriorityQ(100);
 
-    Stack stack = new Stack(100);
+ Stack stack = new Stack(100);
 
-    MyHashMap map = new MyHashMap(50);
+ MyHashMap map = new MyHashMap(50);
 
-    Map<String, Integer> resourceStock = new HashMap<>();
+ Map<String, Integer> resourceStock = new HashMap<>();
 
-    int dispatchedCount = 0;
+ int dispatchedCount = 0;
 
 
 
-    public DisasterReliefAllocator() {
+ public DisasterReliefAllocator() {
 
-        resourceStock.put("Food", 50);
+     resourceStock.put("Food", 50);
 
-        resourceStock.put("Water", 50);
+     resourceStock.put("Water", 50);
 
-        resourceStock.put("Medical", 50);
+     resourceStock.put("Medical", 50);
 
-    }
+ }
 
 
 
-    public void addRequest(ReliefRequest request) {
+ public void addRequest(ReliefRequest request) {
 
-        queue.insert(request);
+     queue.insert(request);
 
-        map.put(request.lID, request);
+     map.put(request.lID, request);
 
-        //stack.push(request);
+     //stack.push(request);
 
-    }
+ }
 
 
 
-    public void allocate() {
+ public void allocate() {
 
-        queue.promoteOldRequests(60000); // auto-promote after 60 seconds
+     queue.promoteOldRequests(60000); // auto-promote after 60 seconds
 
-        ReliefRequest r = queue.extractMin();
+     ReliefRequest r = queue.extractMin();
 
-        if (r != null && resourceStock.getOrDefault(r.resType, 0) >= r.quantity) {
+     if (r != null && resourceStock.getOrDefault(r.resType, 0) >= r.quantity) {
 
-            System.out.println("\u001B[32mDispatched to: " + r.lName + " | Resource: " + r.resType + " | Qty: " + r.quantity + "\u001B[0m");
+         System.out.println("\u001B[32mDispatched to: " + r.lName + " | Resource: " + r.resType + " | Qty: " + r.quantity + "\u001B[0m");
 
-            dispatchedCount++;
+         dispatchedCount++;
 
-            resourceStock.put(r.resType, resourceStock.get(r.resType) - r.quantity);
+         resourceStock.put(r.resType, resourceStock.get(r.resType) - r.quantity);
 
-            map.remove(r.lID);
+         map.remove(r.lID);
 
-            stack.push(r);
+         stack.push(r);
 
-        } else if (r != null) {
+     } else if (r != null) {
 
-            System.out.println("\u001B[31mInsufficient resource for: " + r.resType + "\nNo requests could be fulfilled. Consider refilling stock.\u001B[0m");
+         System.out.println("\u001B[31mInsufficient resource for: " + r.resType + "\nNo requests could be fulfilled. Consider refilling stock.\u001B[0m");
 
-            queue.insert(r); // reinsert the request
+         queue.insert(r); // reinsert the request
 
-        } else {
+     } else {
 
-            System.out.println("No pending requests.");
+         System.out.println("No pending requests.");
 
-        }
+     }
 
-    }
+ }
 
 
 
-    public void undo() {
+ public void undo() {
 
-        ReliefRequest last = stack.pop();
+     ReliefRequest last = stack.pop();
 
-        if (last != null) {
+     if (last != null) {
 
-            System.out.println("Undoing for: " + last.lName);
+         System.out.println("Undoing for: " + last.lName);
 
-            queue.insert(last);
+         queue.insert(last);
 
-            map.put(last.lID, last);
+         map.put(last.lID, last);
 
-            resourceStock.put(last.resType, resourceStock.getOrDefault(last.resType, 0) + last.quantity);
+         resourceStock.put(last.resType, resourceStock.getOrDefault(last.resType, 0) + last.quantity);
 
-        } else {
+     } else {
 
-            System.out.println("Nothing to undo.");
+         System.out.println("Nothing to undo.");
 
-        }
+     }
 
-    }
+ }
 
 
 
-    public void showRequest(String locationID) {
+ public void showRequest(String locationID) {
 
-        ReliefRequest r = map.get(locationID);
+     ReliefRequest r = map.get(locationID);
 
-        if (r != null) {
+     if (r != null) {
 
-            System.out.println("Location: " + r.lName + " | Resource: " + r.resType + " | Priority: " + r.priority);
+         System.out.println("Location: " + r.lName + " | Resource: " + r.resType + " | Priority: " + r.priority);
 
-        } else {
+     } else {
 
-            System.out.println("No request found for: " + locationID);
+         System.out.println("No request found for: " + locationID);
 
-        }
+     }
 
-    }
+ }
 
 
 
-    public void showTopUrgent(int k) {
+ public void showTopUrgent(int k) {
 
-        List<ReliefRequest> urgent = queue.getTopK(k);
+     List<ReliefRequest> urgent = queue.getTopK(k);
 
-        System.out.println("\nTop " + k + " Urgent Requests:");
+     System.out.println("\nTop " + k + " Urgent Requests:");
 
-        for (ReliefRequest r : urgent) {
+     for (ReliefRequest r : urgent) {
 
-            System.out.println("- " + r.lName + " | " + r.resType + " | Priority: " + r.priority);
+         System.out.println("- " + r.lName + " | " + r.resType + " | Priority: " + r.priority);
 
-        }
+     }
 
-    }
+ }
 
 
 
-    public void showStats() {
+ public void showStats() {
 
-        List<ReliefRequest> pending = map.getAll();
+     List<ReliefRequest> pending = map.getAll();
 
-        Map<String, Integer> resCount = new HashMap<>();
+     Map<String, Integer> resCount = new HashMap<>();
 
-        for (ReliefRequest r : pending) {
+     for (ReliefRequest r : pending) {
 
-            resCount.put(r.resType, resCount.getOrDefault(r.resType, 0) + 1);
+         resCount.put(r.resType, resCount.getOrDefault(r.resType, 0) + 1);
 
-        }
+     }
 
 
 
-        System.out.println("\n--- Request Statistics ---");
+     System.out.println("\n--- Request Statistics ---");
 
-        System.out.println("Total Requests: " + (pending.size() + dispatchedCount));
+     System.out.println("Total Requests: " + (pending.size() + dispatchedCount));
 
-        System.out.println("Dispatched: " + dispatchedCount);
+     System.out.println("Dispatched: " + dispatchedCount);
 
-        System.out.println("Pending: " + pending.size());
+     System.out.println("Pending: " + pending.size());
 
-        System.out.println("Most Requested Resource: " +
+     System.out.println("Most Requested Resource: " +
 
-            resCount.entrySet().stream().max(Map.Entry.comparingByValue()).orElse(Map.entry("None", 0)).getKey());
+         resCount.entrySet().stream().max(Map.Entry.comparingByValue()).orElse(Map.entry("None", 0)).getKey());
 
-        System.out.println("Available Resources: " + resourceStock);
+     System.out.println("Available Resources: " + resourceStock);
 
-    }
+ }
 
 
 
-    public void showAnalytics() {
+ public void showAnalytics() {
 
-        System.out.println("\nResource Request Count:");
+     System.out.println("\nResource Request Count:");
 
-        for (String type : new String[]{"Medical", "Food", "Water"}) {
+     for (String type : new String[]{"Medical", "Food", "Water"}) {
 
-            System.out.println(type + ": " + map.countRequestsByType(type));
+         System.out.println(type + ": " + map.countRequestsByType(type));
 
-        }
+     }
 
-        ReliefRequest oldest = queue.getOldestPending();
+     ReliefRequest oldest = queue.getOldestPending();
 
-        if (oldest != null) {
+     if (oldest != null) {
 
-            System.out.println("Oldest Pending: " + oldest.lName + " - " + oldest.resType);
+         System.out.println("Oldest Pending: " + oldest.lName + " - " + oldest.resType);
 
-        }
+     }
 
-    }
+ }
 
-    
+ 
 
-    public void refillResource(String type, int quantity) {
+ public void refillResource(String type, int quantity) {
 
-        int current = resourceStock.getOrDefault(type, 0);
+     int current = resourceStock.getOrDefault(type, 0);
 
-        resourceStock.put(type, current + quantity);
+     resourceStock.put(type, current + quantity);
 
-        System.out.println("Resource stock updated: " + type + " = " + (current + quantity));
+     System.out.println("Resource stock updated: " + type + " = " + (current + quantity));
 
-    }
+ }
 
 }
 
 
 
-// Main Class
+//Main Class
 
 public class Main {
 
-    public static void main(String[] args) {
+ public static void main(String[] args) {
 
-        DisasterReliefAllocator allocator = new DisasterReliefAllocator();
+     DisasterReliefAllocator allocator = new DisasterReliefAllocator();
 
-        Scanner sc = new Scanner(System.in);
+     Scanner sc = new Scanner(System.in);
 
 
 
-        while (true) {
+     while (true) {
 
-            System.out.println("\n=== Disaster Relief Resource Allocator ===");
+         System.out.println("\n=== Disaster Relief Resource Allocator ===");
 
-            System.out.println("1. Add Relief Request");
+         System.out.println("1. Add Relief Request");
 
-            System.out.println("2. Allocate Resource (Dispatch)");
+         System.out.println("2. Allocate Resource (Dispatch)");
 
-            System.out.println("3. Undo Last Dispatch");
+         System.out.println("3. Undo Last Dispatch");
 
-            System.out.println("4. Show Request by Location ID");
+         System.out.println("4. Show Request by Location ID");
 
-            System.out.println("5. View Top 3 Urgent Requests");
+         System.out.println("5. View Top 3 Urgent Requests");
 
-            System.out.println("6. View Statistics");
+         System.out.println("6. View Statistics");
 
-            System.out.println("7. Show System Analytics");
+         System.out.println("7. Show System Analytics");
 
-            System.out.println("8. Refill Resource Stock");
+         System.out.println("8. Refill Resource Stock");
 
-            System.out.println("9. Exit");
+         System.out.println("9. Exit");
 
-            System.out.print("Enter your choice: ");
+         System.out.print("Enter your choice: ");
 
-            int choice = sc.nextInt();
+         int choice = sc.nextInt();
 
-            sc.nextLine();
+         sc.nextLine();
 
 
 
-            switch (choice) {
+         switch (choice) {
 
-                case 1:
+             case 1:
 
-                    System.out.print("Enter Location ID: ");
+                 System.out.print("Enter Location ID: ");
 
-                    String locID = sc.nextLine();
+                 String locID = sc.nextLine();
 
-                    System.out.print("Enter Location Name: ");
+                 System.out.print("Enter Location Name: ");
 
-                    String locName = sc.nextLine();
+                 String locName = sc.nextLine();
 
-                    System.out.print("Enter Resource Type (Food/Water/Medical): ");
+                 System.out.print("Enter Resource Type (Food/Water/Medical): ");
 
-                    String resType = sc.nextLine();
+                 String resType = sc.nextLine();
 
-                    System.out.print("Enter Quantity: ");
+                 System.out.print("Enter Quantity: ");
 
-                    int qty = sc.nextInt();
+                 int qty = sc.nextInt();
 
-                    System.out.print("Enter Priority (1-5): ");
+                 System.out.print("Enter Priority (1-5): ");
 
-                    int prio = sc.nextInt();
+                 int prio = sc.nextInt();
 
-                    allocator.addRequest(new ReliefRequest(locID, locName, resType, prio, qty));
+                 allocator.addRequest(new ReliefRequest(locID, locName, resType, prio, qty));
 
-                    break;
+                 break;
 
-                case 2:
+             case 2:
 
-                    allocator.allocate();
+                 allocator.allocate();
 
-                    break;
+                 break;
 
-                case 3:
+             case 3:
 
-                    allocator.undo();
+                 allocator.undo();
 
-                    break;
+                 break;
 
-                case 4:
+             case 4:
 
-                    System.out.print("Enter Location ID to search: ");
+                 System.out.print("Enter Location ID to search: ");
 
-                    allocator.showRequest(sc.nextLine());
+                 allocator.showRequest(sc.nextLine());
 
-                    break;
+                 break;
 
-                case 5:
+             case 5:
 
-                    allocator.showTopUrgent(3);
+                 allocator.showTopUrgent(3);
 
-                    break;
+                 break;
 
-                case 6:
+             case 6:
 
-                    allocator.showStats();
+                 allocator.showStats();
 
-                    break;
+                 break;
 
-                case 7:
+             case 7:
 
-                    allocator.showAnalytics();
+                 allocator.showAnalytics();
 
-                    break;
+                 break;
 
-                case 8:
+             case 8:
 
-                	System.out.print("Enter Resource Type to Refill: ");
+             	System.out.print("Enter Resource Type to Refill: ");
 
-                    String refillType = sc.next();
+                 String refillType = sc.next();
 
-                    System.out.print("Enter Quantity to Add: ");
+                 System.out.print("Enter Quantity to Add: ");
 
-                    int addQty = sc.nextInt();
+                 int addQty = sc.nextInt();
 
-                    allocator.refillResource(refillType, addQty);
+                 allocator.refillResource(refillType, addQty);
 
-                    break;
+                 break;
 
-                case 9:
+             case 9:
 
-                    System.out.println("Exiting system. Stay safe!");
+                 System.out.println("Exiting system. Stay safe!");
 
-                    return;
+                 return;
 
-                default:
+             default:
 
-                    System.out.println("Invalid choice.");
+                 System.out.println("Invalid choice.");
 
-            }
+         }
 
-        }
+     }
 
-    }
+ }
 
 }
